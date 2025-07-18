@@ -1,0 +1,39 @@
+stages:
+  - setup
+  - plan
+  - apply
+
+before_script:
+  - echo "Setting up the environment for Terraform and Azure CLI"
+  - apt-get update && apt-get install -y curl unzip jq
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | tee /etc/apt/trusted.gpg.d/hashicorp.asc
+  - apt-get update && apt-get install terraform
+  - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  - terraform --version
+  - az --version
+
+# Stage 1: Setup - Install dependencies
+setup:
+  stage: setup
+  script:
+    - echo "Setting up Azure CLI and Terraform"
+    - terraform init $TF_WORKING_DIR  # Initialize Terraform
+  only:
+    - main  # Run only on the main branch
+
+# Stage 2: Plan - Execute Terraform plan
+plan:
+  stage: plan
+  script:
+    - terraform plan $TF_WORKING_DIR  # Plan the Terraform execution
+  only:
+    - main  # Run only on the main branch
+
+# Stage 3: Apply - Apply the Terraform changes
+apply:
+  stage: apply
+  script:
+    - terraform apply -auto-approve $TF_WORKING_DIR  # Apply the Terraform plan
+  only:
+    - main  # Run only on the main branch
+  when: manual  # Make 'apply' manual to avoid accidental runs
